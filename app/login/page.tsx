@@ -18,27 +18,56 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
-  const handleLogin = async (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      if (isSignUp) {
+        console.log('Attempting signup with:', { email });
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
+            data: {
+              email,
+            },
+          },
+        });
 
-      if (error) throw error;
+        console.log('Signup response:', { data, error });
 
-      router.push('/dashboard');
-      router.refresh();
-    } catch (error) {
+        if (error) throw error;
+
+        if (data.user) {
+          toast({
+            title: 'Success',
+            description: 'Check your email to confirm your account',
+          });
+          setEmail('');
+          setPassword('');
+        }
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) throw error;
+
+        router.push('/dashboard');
+        router.refresh();
+      }
+    } catch (error: any) {
+      console.error('Auth error:', error);
       toast({
         title: 'Error',
-        description: 'Invalid login credentials',
+        description: error.message || 'Invalid login credentials',
         variant: 'destructive',
       });
     } finally {
@@ -54,12 +83,16 @@ export default function LoginPage() {
             <div className="h-8 w-8 rounded-lg bg-primary" />
             <span className="text-2xl font-bold">ProjectHub</span>
           </div>
-          <h1 className="text-2xl font-semibold text-center">Welcome back</h1>
+          <h1 className="text-2xl font-semibold text-center">
+            {isSignUp ? 'Create an account' : 'Welcome back'}
+          </h1>
           <p className="text-sm text-muted-foreground text-center">
-            Enter your credentials to access your account
+            {isSignUp
+              ? 'Enter your email to create your account'
+              : 'Enter your credentials to access your account'}
           </p>
         </CardHeader>
-        <form onSubmit={handleLogin}>
+        <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium" htmlFor="email">
@@ -100,10 +133,18 @@ export default function LoginPage() {
               </div>
             </div>
           </CardContent>
-          <CardFooter>
+          <CardFooter className="flex flex-col space-y-4">
             <Button className="w-full" type="submit" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Sign in
+              {isSignUp ? 'Sign up' : 'Sign in'}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              className="w-full"
+              onClick={() => setIsSignUp(!isSignUp)}
+            >
+              {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
             </Button>
           </CardFooter>
         </form>

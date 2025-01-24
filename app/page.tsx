@@ -1,104 +1,46 @@
-"use client";
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
-import { MetricCard } from "@/components/ui/metric-card";
-import { ProjectTable } from "@/components/dashboard/project-table";
-
-const metrics = [
-  {
-    title: "Total revenue",
-    value: "$53,009.89",
-    change: {
-      type: "increase" as const,
-      value: "12% increase",
-      period: "last month"
-    },
-    color: "bg-purple-100"
-  },
-  {
-    title: "Projects",
-    value: "95/100",
-    change: {
-      type: "decrease" as const,
-      value: "10% decrease",
-      period: "last month"
-    },
-    color: "bg-orange-100"
-  },
-  {
-    title: "Time spent",
-    value: "1022/1300 Hrs",
-    change: {
-      type: "increase" as const,
-      value: "8% increase",
-      period: "last month"
-    },
-    color: "bg-blue-100"
-  },
-  {
-    title: "Resources",
-    value: "101/120",
-    change: {
-      type: "increase" as const,
-      value: "2% increase",
-      period: "last month"
-    },
-    color: "bg-yellow-100"
-  }
-];
-
-const projects = [
-  {
-    name: "Nelsa web development",
-    projectManager: "Om prakash sao",
-    dueDate: "May 25, 2023",
-    status: "completed" as const,
-    progress: 100
-  },
-  {
-    name: "Datascale AI app",
-    projectManager: "Neilsan mando",
-    dueDate: "Jun 20, 2023",
-    status: "delayed" as const,
-    progress: 28
-  }
-];
-
-export default function Home() {
+export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-semibold">Dashboard</h1>
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search for anything..."
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-[300px]"
-            />
-            <svg
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
+    <div className="min-h-screen bg-white">
+      {/* Navigation */}
+      <nav className="border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <div className="h-8 w-8 bg-primary rounded-lg" />
+              <span className="ml-2 text-xl font-bold">Promage</span>
+            </div>
+            <div>
+              <Link href="/login">
+                <Button>Sign in</Button>
+              </Link>
+            </div>
           </div>
         </div>
+      </nav>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {metrics.map((metric, index) => (
-            <MetricCard key={index} {...metric} />
-          ))}
+      {/* Hero Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        <div className="text-center">
+          <h1 className="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
+            <span className="block">Project Management</span>
+            <span className="block text-primary">Made Simple</span>
+          </h1>
+          <p className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
+            Streamline your workflow, collaborate with your team, and deliver projects on time.
+          </p>
+          <div className="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8">
+            <div className="rounded-md shadow">
+              <Link href="/login">
+                <Button size="lg" className="w-full">
+                  Get Started
+                </Button>
+              </Link>
+            </div>
+          </div>
         </div>
-
-        <ProjectTable projects={projects} />
       </div>
     </div>
   );

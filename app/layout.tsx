@@ -1,7 +1,8 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
-import { Sidebar } from '@/components/layout/sidebar';
+import { headers, cookies } from 'next/headers';
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -10,18 +11,20 @@ export const metadata: Metadata = {
   description: 'Modern project management solution for teams',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const supabase = createServerComponentClient({ cookies });
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
   return (
     <html lang="en">
       <body className={inter.className}>
-        <div className="flex">
-          <Sidebar />
-          <main className="flex-1 bg-gray-50">{children}</main>
-        </div>
+        {children}
       </body>
     </html>
   );
