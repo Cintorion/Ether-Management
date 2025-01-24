@@ -9,16 +9,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
-interface CreateProjectDialogProps {
+interface CreateTaskDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onProjectCreated: () => void;
+  onTaskCreated: () => void;
 }
 
-export function CreateProjectDialog({ open, onOpenChange, onProjectCreated }: CreateProjectDialogProps) {
-  const [name, setName] = useState('');
+export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: CreateTaskDialogProps) {
+  const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [status, setStatus] = useState('planning');
+  const [status, setStatus] = useState('todo');
   const [loading, setLoading] = useState(false);
   const supabase = createClient();
 
@@ -27,39 +27,33 @@ export function CreateProjectDialog({ open, onOpenChange, onProjectCreated }: Cr
     setLoading(true);
 
     try {
-      // Get the current user
       const { data: { user } } = await supabase.auth.getUser();
-      
       if (!user) throw new Error('No user found');
 
-      const { error } = await supabase.from('projects').insert({
-        name,
+      const { error } = await supabase.from('tasks').insert({
+        title,
         description,
         status,
-        progress: 0,
-        user_id: user.id
+        user_id: user.id,
+        order_index: 0 // Will be at the top of the column
       });
 
-      if (error) {
-        console.error('Error creating project:', error);
-        throw error;
-      }
+      if (error) throw error;
 
       toast({
         title: 'Success',
-        description: 'Project created successfully',
+        description: 'Task created successfully',
       });
       
-      onProjectCreated();
+      onTaskCreated();
       onOpenChange(false);
-      setName('');
+      setTitle('');
       setDescription('');
-      setStatus('planning');
+      setStatus('todo');
     } catch (error: any) {
-      console.error('Error:', error);
       toast({
         title: 'Error',
-        description: error.message || 'Failed to create project',
+        description: error.message || 'Failed to create task',
         variant: 'destructive',
       });
     } finally {
@@ -71,16 +65,16 @@ export function CreateProjectDialog({ open, onOpenChange, onProjectCreated }: Cr
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create New Project</DialogTitle>
+          <DialogTitle>Create New Task</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
-              <label htmlFor="name" className="text-sm font-medium">Project Name</label>
+              <label htmlFor="title" className="text-sm font-medium">Task Title</label>
               <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
                 required
               />
             </div>
@@ -100,17 +94,16 @@ export function CreateProjectDialog({ open, onOpenChange, onProjectCreated }: Cr
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="planning">Planning</SelectItem>
+                  <SelectItem value="todo">To Do</SelectItem>
                   <SelectItem value="in-progress">In Progress</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="on-hold">On Hold</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           <DialogFooter className="mt-4">
             <Button type="submit" disabled={loading}>
-              Create Project
+              Create Task
             </Button>
           </DialogFooter>
         </form>

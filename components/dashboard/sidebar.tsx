@@ -1,67 +1,60 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
-import { Home, LayoutDashboard, ClipboardList, Target, LogOut } from 'lucide-react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { LayoutDashboard, ListTodo, FolderKanban } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-export default function Sidebar() {
-  const router = useRouter();
-  const supabase = createClient();
+const routes = [
+  {
+    label: 'Overview',
+    icon: LayoutDashboard,
+    href: '/dashboard',
+    color: 'text-sky-500',
+  },
+  {
+    label: 'Projects',
+    icon: FolderKanban,
+    href: '/projects',
+    color: 'text-violet-500',
+  },
+  {
+    label: 'Tasks',
+    icon: ListTodo,
+    href: '/dashboard/tasks',
+    color: 'text-pink-700',
+  },
+];
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    router.replace('/login');
-  };
+export function Sidebar() {
+  const pathname = usePathname();
 
   return (
-    <div className="w-64 bg-white border-r h-screen p-4">
-      <div className="flex items-center space-x-2 mb-8">
-        <div className="h-8 w-8 rounded-lg bg-primary" />
-        <span className="text-xl font-bold">ProjectHub</span>
+    <div className="space-y-4 py-4 flex flex-col h-full bg-[#111827] text-white">
+      <div className="px-3 py-2 flex-1">
+        <Link href="/dashboard" className="flex items-center pl-3 mb-14">
+          <h1 className="text-2xl font-bold">
+            ProjectHub
+          </h1>
+        </Link>
+        <div className="space-y-1">
+          {routes.map((route) => (
+            <Link
+              key={route.href}
+              href={route.href}
+              className={cn(
+                'text-sm group flex p-3 w-full justify-start font-medium cursor-pointer hover:text-white hover:bg-white/10 rounded-lg transition',
+                pathname === route.href ? 'text-white bg-white/10' : 'text-zinc-400',
+              )}
+            >
+              <div className="flex items-center flex-1">
+                <route.icon className={cn('h-5 w-5 mr-3', route.color)} />
+                {route.label}
+              </div>
+            </Link>
+          ))}
+        </div>
       </div>
-
-      <nav className="space-y-2">
-        <Link
-          href="/dashboard"
-          className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100"
-        >
-          <Home className="h-5 w-5" />
-          <span>Overview</span>
-        </Link>
-
-        <Link
-          href="/dashboard/projects"
-          className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100"
-        >
-          <LayoutDashboard className="h-5 w-5" />
-          <span>Projects</span>
-        </Link>
-
-        <Link
-          href="/dashboard/tasks"
-          className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100"
-        >
-          <ClipboardList className="h-5 w-5" />
-          <span>Tasks</span>
-        </Link>
-
-        <Link
-          href="/dashboard/mvp"
-          className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100"
-        >
-          <Target className="h-5 w-5" />
-          <span>MVP Tracking</span>
-        </Link>
-      </nav>
-
-      <button
-        onClick={handleSignOut}
-        className="absolute bottom-4 flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 text-red-500"
-      >
-        <LogOut className="h-5 w-5" />
-        <span>Sign Out</span>
-      </button>
     </div>
   );
 } 

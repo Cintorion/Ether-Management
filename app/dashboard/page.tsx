@@ -2,87 +2,113 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Button } from '@/components/ui/button';
-import { ProjectCard } from '@/components/dashboard/project-card';
-import { TaskList } from '@/components/dashboard/task-list';
-import { Plus } from 'lucide-react';
-import { CreateProjectDialog } from '@/components/dashboard/create-project-dialog';
+import { Card } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { BarChart, Activity, Users, CheckCircle } from 'lucide-react';
 
-interface Project {
-  id: string;
-  name: string;
-  description: string;
-  status: string;
-}
-
-interface Task {
-  id: string;
-  title: string;
-  status: string;
+interface DashboardStats {
+  totalProjects: number;
+  completedProjects: number;
+  totalTasks: number;
+  completedTasks: number;
 }
 
 export default function DashboardPage() {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [stats, setStats] = useState<DashboardStats>({
+    totalProjects: 0,
+    completedProjects: 0,
+    totalTasks: 0,
+    completedTasks: 0,
+  });
   const [loading, setLoading] = useState(true);
-  const [showCreateProject, setShowCreateProject] = useState(false);
   const supabase = createClient();
 
+  const fetchStats = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No user found');
+
+      // Fetch projects stats
+      const { data: projects } = await supabase
+        .from('projects')
+        .select('status')
+        .eq('user_id', user.id);
+
+      // Fetch tasks stats
+      const { data: tasks } = await supabase
+        .from('tasks')
+        .select('status')
+        .eq('user_id', user.id);
+
+      setStats({
+        totalProjects: projects?.length || 0,
+        completedProjects: projects?.filter(p => p.status === 'completed').length || 0,
+        totalTasks: tasks?.length || 0,
+        completedTasks: tasks?.filter(t => t.status === 'completed').length || 0,
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    fetchProjects();
-    fetchTasks();
+    fetchStats();
   }, []);
 
-  const fetchProjects = async () => {
-    const { data, error } = await supabase
-      .from('projects')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (!error && data) {
-      setProjects(data);
-    }
-    setLoading(false);
-  };
-
-  const fetchTasks = async () => {
-    const { data, error } = await supabase
-      .from('tasks')
-      .select('*')
-      .order('due_date', { ascending: true })
-      .limit(5);
-
-    if (!error && data) {
-      setTasks(data);
-    }
-  };
+  const stats_cards = [
+    {
+      title: 'Total Projects',
+      value: stats.totalProjects,
+      icon: BarChart,
+      color: 'text-blue-500',
+    },
+    {
+      title: 'Project Completion',
+      value: `${Math.round((stats.completedProjects / stats.totalProjects) * 100) || 0}%`,
+      icon: Activity,
+      color: 'text-green-500',
+    },
+    {
+      title: 'Total Tasks',
+      value: stats.totalTasks,
+      icon: CheckCircle,
+      color: 'text-purple-500',
+    },
+    {
+      title: 'Task Completion',
+      value: `${Math.round((stats.completedTasks / stats.totalTasks) * 100) || 0}%`,
+      icon: Users,
+      color: 'text-orange-500',
+    },
+  ];
 
   return (
     <div className="space-y-8">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <Button onClick={() => setShowCreateProject(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          New Project
-        </Button>
-      </div>
+      <h1 className="text-3xl font-bold">Dashboard Overview</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {projects.map((project) => (
-          <ProjectCard key={project.id} project={project} />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {stats_cards.map((stat, index) => (
+          <Card key={index} className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">{stat.title}</p>
+                <h3 className="text-2xl font-bold mt-2">{stat.value}</h3>
+              </div>
+              <stat.icon className={`h-8 w-8 ${stat.color}`} />
+            </div>
+            {stat.title.includes('Completion') && (
+              <Progress 
+                value={parseInt(stat.value)} 
+                className="mt-4"
+              />
+            )}
+          </Card>
         ))}
       </div>
 
-      <div>
-        <h2 className="text-2xl font-semibold mb-4">Recent Tasks</h2>
-        <TaskList tasks={tasks} />
-      </div>
-
-      <CreateProjectDialog
-        open={showCreateProject}
-        onOpenChange={setShowCreateProject}
-        onProjectCreated={fetchProjects}
-      />
+      {/* Add more dashboard sections here */}
     </div>
   );
 } 
