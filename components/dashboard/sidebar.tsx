@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, ListTodo, FolderKanban } from 'lucide-react';
+import { LayoutDashboard, ListTodo, FolderKanban, FileSpreadsheet } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const routes = [
@@ -23,6 +23,12 @@ const routes = [
     icon: ListTodo,
     href: '/dashboard/tasks',
     color: 'text-pink-700',
+  },
+  {
+    label: 'Canvas',
+    icon: FileSpreadsheet,
+    href: '/canvas',
+    color: 'text-yellow-500',
   },
 ];
 

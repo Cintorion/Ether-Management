@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { createClient } from '@/lib/supabase/client';
 import { Plus } from 'lucide-react';
@@ -13,7 +14,8 @@ interface Task {
   id: string;
   title: string;
   description: string;
-  status: 'todo' | 'in-progress' | 'completed';
+  status: string;
+  project_id: string;
   order_index: number;
 }
 
@@ -36,6 +38,8 @@ export function KanbanBoard() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateTask, setShowCreateTask] = useState(false);
+  const [currentProject, setCurrentProject] = useState<string | null>(null);
+  const searchParams = useSearchParams();
   const supabase = createClient();
 
   const fetchTasks = async () => {
@@ -43,15 +47,25 @@ export function KanbanBoard() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No user found');
 
-      const { data, error } = await supabase
+      const projectId = searchParams.get('projectId');
+      setCurrentProject(projectId);
+
+      let query = supabase
         .from('tasks')
         .select('*')
         .eq('user_id', user.id)
-        .order('order_index', { ascending: true });
+        .order('order_index');
+
+      if (projectId) {
+        query = query.eq('project_id', projectId);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setTasks(data || []);
     } catch (error) {
+      console.error('Error:', error);
       toast({
         title: 'Error',
         description: 'Failed to fetch tasks',
@@ -64,17 +78,7 @@ export function KanbanBoard() {
 
   useEffect(() => {
     fetchTasks();
-
-    // Subscribe to task changes
-    const channel = supabase
-      .channel('tasks_channel')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, fetchTasks)
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+  }, [searchParams]); // Re-fetch when URL params change
 
   const onDragEnd = async (result: DropResult) => {
     if (!result.destination) return;
@@ -168,6 +172,7 @@ export function KanbanBoard() {
         open={showCreateTask}
         onOpenChange={setShowCreateTask}
         onTaskCreated={fetchTasks}
+        initialProjectId={currentProject}
       />
     </div>
   );

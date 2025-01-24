@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,17 +13,65 @@ interface CreateTaskDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onTaskCreated: () => void;
+  initialProjectId?: string | null;
 }
 
-export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: CreateTaskDialogProps) {
+interface Project {
+  id: string;
+  name: string;
+}
+
+export function CreateTaskDialog({ 
+  open, 
+  onOpenChange, 
+  onTaskCreated,
+  initialProjectId 
+}: CreateTaskDialogProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState('todo');
   const [loading, setLoading] = useState(false);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [selectedProject, setSelectedProject] = useState<string>(initialProjectId || '');
   const supabase = createClient();
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data, error } = await supabase
+          .from('projects')
+          .select('id, name')
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+        setProjects(data || []);
+      } catch (error) {
+        console.error('Error fetching projects:', error);
+      }
+    };
+
+    fetchProjects();
+  }, []);
+
+  useEffect(() => {
+    if (initialProjectId) {
+      setSelectedProject(initialProjectId);
+    }
+  }, [initialProjectId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedProject) {
+      toast({
+        title: 'Error',
+        description: 'Please select a project',
+        variant: 'destructive',
+      });
+      return;
+    }
     setLoading(true);
 
     try {
@@ -35,7 +83,8 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: CreateTa
         description,
         status,
         user_id: user.id,
-        order_index: 0 // Will be at the top of the column
+        project_id: selectedProject,
+        order_index: 0
       });
 
       if (error) throw error;
@@ -50,6 +99,7 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: CreateTa
       setTitle('');
       setDescription('');
       setStatus('todo');
+      setSelectedProject('');
     } catch (error: any) {
       toast({
         title: 'Error',
@@ -86,6 +136,25 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: CreateTa
                 onChange={(e) => setDescription(e.target.value)}
                 required
               />
+            </div>
+            <div>
+              <label htmlFor="project" className="text-sm font-medium">Project</label>
+              <Select 
+                value={selectedProject} 
+                onValueChange={setSelectedProject}
+                required
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a project" />
+                </SelectTrigger>
+                <SelectContent>
+                  {projects.map((project) => (
+                    <SelectItem key={project.id} value={project.id}>
+                      {project.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <label htmlFor="status" className="text-sm font-medium">Status</label>
