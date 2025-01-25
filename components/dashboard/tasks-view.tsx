@@ -13,6 +13,9 @@ interface Task {
   status: string;
   project_id: string;
   order_index: number;
+  due_date: string | null;
+  priority: 'low' | 'medium' | 'high';
+  labels: string[];
 }
 
 export function TasksView() {
