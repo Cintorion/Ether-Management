@@ -1,9 +1,10 @@
-"use client";
+'use client';
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { KanbanBoard } from '@/components/dashboard/kanban-board';
 import { toast } from '@/hooks/use-toast';
+import { TaskStats } from '@/components/dashboard/task-stats';
 
 interface Task {
   id: string;
@@ -11,12 +12,10 @@ interface Task {
   description: string;
   status: string;
   project_id: string;
-  user_id: string;
-  created_at: string;
   order_index: number;
 }
 
-export default function TasksPage() {
+export function TasksView() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const supabase = createClient();
@@ -30,13 +29,11 @@ export default function TasksPage() {
         .from('tasks')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('order_index', { ascending: true });
 
       if (error) throw error;
-
       setTasks(data || []);
     } catch (error) {
-      console.error('Error:', error);
       toast({
         title: 'Error',
         description: 'Failed to fetch tasks',
@@ -51,37 +48,43 @@ export default function TasksPage() {
     fetchTasks();
   }, []);
 
-  const handleTaskUpdate = async (taskId: string, status: string) => {
+  const handleTaskUpdate = async (taskId: string, newStatus: string) => {
     try {
-      const { error } = await supabase
-        .from('tasks')
-        .update({ status })
-        .eq('id', taskId);
+      if (taskId && newStatus) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
 
-      if (error) throw error;
+        const { error } = await supabase
+          .from('tasks')
+          .update({ 
+            status: newStatus,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', taskId)
+          .eq('user_id', user.id);
 
+        if (error) throw error;
+      }
+      
       await fetchTasks();
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error updating task:', error);
       toast({
         title: 'Error',
-        description: 'Failed to update task',
+        description: 'Failed to update task status',
         variant: 'destructive',
       });
     }
   };
 
   if (loading) {
-    return <div className="p-4">Loading tasks...</div>;
+    return <div>Loading tasks...</div>;
   }
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Tasks</h1>
-        <p className="text-zinc-500">Manage your tasks using the Kanban board below.</p>
-      </div>
+    <div>
+      <TaskStats tasks={tasks} />
       <KanbanBoard tasks={tasks} onTaskUpdate={handleTaskUpdate} />
     </div>
   );
-}
+} 

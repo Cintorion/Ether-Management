@@ -100,7 +100,7 @@ export default function DashboardPage() {
             </div>
             {stat.title.includes('Completion') && (
               <Progress 
-                value={parseInt(stat.value)} 
+                value={parseInt(stat.value.toString())} 
                 className="mt-4"
               />
             )}
