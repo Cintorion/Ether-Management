@@ -5,18 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { KanbanBoard } from '@/components/dashboard/kanban-board';
 import { toast } from '@/hooks/use-toast';
 import { TaskStats } from '@/components/dashboard/task-stats';
-
-interface Task {
-  id: string;
-  title: string;
-  description: string;
-  status: string;
-  project_id: string;
-  order_index: number;
-  due_date: string | null;
-  priority: 'low' | 'medium' | 'high';
-  labels: string[];
-}
+import { Task } from '@/types/task';
 
 export function TasksView() {
   const [tasks, setTasks] = useState<Task[]>([]);

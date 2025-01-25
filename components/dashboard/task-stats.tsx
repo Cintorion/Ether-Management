@@ -3,6 +3,7 @@
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
+import { Task } from '@/types/task';
 
 interface TaskStats {
   totalTasks: number;
@@ -17,7 +18,7 @@ interface TaskStats {
 }
 
 interface TaskStatsProps {
-  tasks: any[];
+  tasks: Task[];
 }
 
 export function TaskStats({ tasks }: TaskStatsProps) {
@@ -87,7 +88,7 @@ export function TaskStats({ tasks }: TaskStatsProps) {
   );
 }
 
-function getTasksByDay(tasks: any[]) {
+function getTasksByDay(tasks: Task[]) {
   const last7Days = Array.from({ length: 7 }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() - i);

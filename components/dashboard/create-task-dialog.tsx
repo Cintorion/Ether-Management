@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar as CalendarIcon } from "lucide-react";
+import { Calendar as CalendarIcon, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
@@ -34,13 +34,10 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: CreateTa
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState<Date | undefined>(undefined);
+  const [time, setTime] = useState('12:00');
   const [priority, setPriority] = useState<string>('medium');
   const [loading, setLoading] = useState(false);
   const supabase = createClient();
-
-  const handleDateSelect = (newDate: Date | undefined) => {
-    setDate(newDate);
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,35 +50,29 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: CreateTa
       return;
     }
 
+    // Combine date and time
+    const [hours, minutes] = time.split(':').map(Number);
+    const dueDate = new Date(date);
+    dueDate.setHours(hours, minutes);
+
     setLoading(true);
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const newTask = {
+      const { error } = await supabase.from('tasks').insert({
         title,
         description,
         status: 'todo',
         user_id: user.id,
         order_index: 0,
-        due_date: date.toISOString(),
+        due_date: dueDate.toISOString(),
         priority,
-        labels: [],
-        updated_at: new Date().toISOString()
-      };
-
-      console.log('Creating task:', newTask); // Debug log
-
-      const { data, error } = await supabase
-        .from('tasks')
-        .insert(newTask)
-        .select()
-        .single();
+        labels: []
+      });
 
       if (error) throw error;
-
-      console.log('Created task:', data); // Debug log
 
       toast({
         title: 'Success',
@@ -91,11 +82,11 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: CreateTa
       setTitle('');
       setDescription('');
       setDate(undefined);
+      setTime('12:00');
       setPriority('medium');
       onOpenChange(false);
       onTaskCreated();
     } catch (error) {
-      console.error('Error creating task:', error); // Debug log
       toast({
         title: 'Error',
         description: 'Failed to create task',
@@ -105,6 +96,12 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: CreateTa
       setLoading(false);
     }
   };
+
+  const timeOptions = Array.from({ length: 12 }, (_, i) => i + 9)
+    .map(hour => ({
+      value: `${hour}:00`,
+      label: format(new Date().setHours(hour), 'ha')
+    }));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -136,10 +133,25 @@ export function CreateTaskDialog({ open, onOpenChange, onTaskCreated }: CreateTa
             <Calendar
               mode="single"
               selected={date}
-              onSelect={handleDateSelect}
+              onSelect={setDate}
               className="rounded-md border"
               disabled={(date) => date < new Date()}
             />
+          </div>
+          <div>
+            <label className="text-sm font-medium">Time</label>
+            <Select value={time} onValueChange={setTime}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select time" />
+              </SelectTrigger>
+              <SelectContent>
+                {timeOptions.map(({ value, label }) => (
+                  <SelectItem key={value} value={value}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <label className="text-sm font-medium">Priority</label>

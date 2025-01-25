@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, ListTodo, FolderKanban, FileSpreadsheet, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, ListTodo, FolderKanban, FileSpreadsheet, MessageSquare, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const routes = [
@@ -35,6 +35,12 @@ const routes = [
     icon: MessageSquare,
     href: '/prompts',
     color: 'text-green-500',
+  },
+  {
+    label: 'Calendar',
+    icon: Calendar,
+    href: '/dashboard/calendar',
+    color: 'text-orange-500',
   },
 ];
 
