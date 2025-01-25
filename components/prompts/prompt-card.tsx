@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Card } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { createClient } from '@/lib/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -16,6 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { StorePromptButton } from "./store-prompt-button";
 
 interface PromptCardProps {
   prompt: {
@@ -27,11 +28,13 @@ interface PromptCardProps {
       name: string;
       icon: string;
     };
+    icon: string;
   };
   onPromptUpdated: () => void;
+  showStoreButton?: boolean;
 }
 
-export function PromptCard({ prompt, onPromptUpdated }: PromptCardProps) {
+export function PromptCard({ prompt, onPromptUpdated, showStoreButton = true }: PromptCardProps) {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -123,6 +126,7 @@ export function PromptCard({ prompt, onPromptUpdated }: PromptCardProps) {
       <Card className="p-6">
         <div className="flex justify-between items-start mb-4">
           <div>
+            {prompt.icon && <span className="text-2xl">{prompt.icon}</span>}
             <h3 className="font-semibold text-lg">{prompt.title}</h3>
             <Badge variant="secondary" className="mt-2">
               {prompt.prompt_categories.name}
@@ -150,6 +154,9 @@ export function PromptCard({ prompt, onPromptUpdated }: PromptCardProps) {
             >
               <Trash2 className="h-4 w-4 text-red-500" />
             </Button>
+            {showStoreButton && (
+              <StorePromptButton promptId={prompt.id} />
+            )}
           </div>
         </div>
         <p className="text-sm text-gray-500 whitespace-pre-wrap">{prompt.content}</p>

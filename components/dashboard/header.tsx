@@ -11,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, User, LogOut, Settings } from 'lucide-react';
+import { ChevronDown, User, LogOut, Settings, Heart } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 

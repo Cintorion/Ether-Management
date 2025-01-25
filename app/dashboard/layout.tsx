@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { Loader2 } from 'lucide-react';
 import { Sidebar } from '@/components/dashboard/sidebar';
 import { Header } from '@/components/dashboard/header';
+import { DashboardNav } from "@/components/dashboard/nav"
 
 export default function DashboardLayout({
   children,
@@ -36,13 +37,15 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      <Sidebar />
-      <div className="flex-1 flex flex-col">
-        <Header />
-        <main className="flex-1 overflow-y-auto p-8">
-          {children}
-        </main>
+    <div className="flex min-h-screen">
+      {/* Sidebar */}
+      <div className="hidden border-r bg-gray-100/40 lg:block lg:w-60 lg:shrink-0 p-4">
+        <DashboardNav />
+      </div>
+      
+      {/* Main content */}
+      <div className="flex-1">
+        {children}
       </div>
     </div>
   );
