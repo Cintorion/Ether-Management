@@ -46,7 +46,7 @@ export default function CalendarPage() {
     <div className="flex-1 bg-[#0f1117]">
       <div className="h-full overflow-auto">
         <div className="max-w-[1800px] mx-auto">
-          <div className="p-6">
+          <div className="p-6 space-y-6">
             <div className="mb-6">
               <h1 className="text-2xl font-bold text-white">Calendar</h1>
               <p className="text-zinc-400">View your tasks by date</p>
