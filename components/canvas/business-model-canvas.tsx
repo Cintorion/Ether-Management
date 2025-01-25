@@ -54,19 +54,35 @@ export function BusinessModelCanvas({ projectId }: BusinessModelCanvasProps) {
       if (!user) throw new Error('No user found');
 
       if (canvasId) {
-        console.log('Updating canvas:', canvasId, newCells);
-        const { error } = await supabase
+        console.log('Updating canvas:', {
+          id: canvasId,
+          cells: newCells,
+          user_id: user.id
+        });
+
+        const { data, error } = await supabase
           .from('canvases')
           .update({ 
             cells: newCells,
             updated_at: new Date().toISOString()
           })
           .eq('id', canvasId)
-          .eq('user_id', user.id);
+          .eq('user_id', user.id)
+          .select();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Update error:', error);
+          throw error;
+        }
+
+        console.log('Update response:', data);
       } else {
-        console.log('Creating new canvas:', newCells);
+        console.log('Creating new canvas:', {
+          project_id: projectId,
+          cells: newCells,
+          user_id: user.id
+        });
+
         const { data, error } = await supabase
           .from('canvases')
           .insert({
@@ -78,7 +94,12 @@ export function BusinessModelCanvas({ projectId }: BusinessModelCanvasProps) {
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('Insert error:', error);
+          throw error;
+        }
+
+        console.log('Insert response:', data);
         if (data) setCanvasId(data.id);
       }
 
@@ -86,11 +107,11 @@ export function BusinessModelCanvas({ projectId }: BusinessModelCanvasProps) {
         title: 'Success',
         description: 'Canvas saved successfully',
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving canvas:', error);
       toast({
         title: 'Error',
-        description: 'Failed to save changes',
+        description: error.message || 'Failed to save changes',
         variant: 'destructive',
       });
     } finally {
@@ -218,27 +239,17 @@ export function BusinessModelCanvas({ projectId }: BusinessModelCanvasProps) {
       <div className="mb-4 bg-gray-100 p-4 rounded-lg">
         <div className="flex justify-between items-center">
           <div>
-            <p className="text-sm text-gray-600">Designed For:</p>
-            <input
-              type="text"
-              className="border-b bg-transparent focus:outline-none"
-              placeholder="Enter name..."
-            />
+            <p className="text-sm text-gray-600">Date: {new Date().toLocaleDateString()}</p>
+            <p className="text-sm text-gray-600">Version 1</p>
           </div>
-          <div className="flex items-center gap-4">
-            <div>
-              <p className="text-sm text-gray-600">Date: {new Date().toLocaleDateString()}</p>
-              <p className="text-sm text-gray-600">Version 1</p>
-            </div>
-            <Button 
-              onClick={handleSave}
-              disabled={isSaving}
-              className="ml-4"
-            >
-              <Save className="h-4 w-4 mr-2" />
-              {isSaving ? 'Saving...' : 'Save Canvas'}
-            </Button>
-          </div>
+          <Button 
+            onClick={handleSave}
+            disabled={isSaving}
+            className="ml-4"
+          >
+            <Save className="h-4 w-4 mr-2" />
+            {isSaving ? 'Saving...' : 'Save Canvas'}
+          </Button>
         </div>
       </div>
 
