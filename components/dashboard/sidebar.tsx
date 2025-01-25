@@ -15,7 +15,7 @@ const routes = [
   {
     label: 'Projects',
     icon: FolderKanban,
-    href: '/dashboard/projects',
+    href: '/projects',
     color: 'text-violet-500',
   },
   {
@@ -27,7 +27,7 @@ const routes = [
   {
     label: 'Canvas',
     icon: FileSpreadsheet,
-    href: '/dashboard/canvas',
+    href: '/canvas',
     color: 'text-yellow-500',
   },
   {

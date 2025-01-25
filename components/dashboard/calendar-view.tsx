@@ -35,9 +35,45 @@ export function CalendarView({ tasks }: CalendarViewProps) {
     }
   };
 
+  // Update the TaskCard component styling
+  function TaskCard({ task, number }: { task: Task; number: number }) {
+    return (
+      <div className="flex items-start gap-4 p-4 rounded-xl bg-[#1a2234] hover:bg-[#1e2738] transition-colors group">
+        <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-[#2a3441] text-gray-300 text-sm font-medium">
+          {number}
+        </div>
+        <div className="flex-1 min-w-0">
+          <h4 className="font-medium text-gray-200 truncate">{task.title}</h4>
+          <p className="text-sm text-gray-400 truncate">{task.description}</p>
+          {task.due_date && (
+            <div className="mt-2 flex items-center gap-2">
+              <div className="flex -space-x-1">
+                <div className="w-6 h-6 rounded-full bg-[#2a3441]" />
+                <div className="w-6 h-6 rounded-full bg-[#2a3441]" />
+              </div>
+              <div className="text-xs text-gray-400">
+                {format(new Date(task.due_date), 'MMM d, h:mm a')}
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          {task.priority === 'high' && (
+            <span className="px-2 py-1 rounded-full text-xs bg-red-500/20 text-red-300">
+              Urgent
+            </span>
+          )}
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-gray-200">
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <Card className="p-6 bg-zinc-950">
+      <Card className="p-6 bg-[#151b2b] border-[#1e2738] rounded-xl shadow-2xl">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-2xl font-bold text-white">
@@ -67,23 +103,23 @@ export function CalendarView({ tasks }: CalendarViewProps) {
           </div>
         </div>
 
-        <div className="grid grid-cols-7 gap-[1px] bg-zinc-800 rounded-lg overflow-hidden">
+        <div className="grid grid-cols-7 gap-[1px] bg-[#1e2738] rounded-lg overflow-hidden">
           {weekDays.map((date, index) => (
             <div 
               key={index} 
               className={cn(
-                "bg-zinc-900 min-h-[200px] transition-colors",
-                isToday(date) && "bg-zinc-800"
+                "bg-[#1a2234] min-h-[200px] transition-colors",
+                isToday(date) && "bg-[#202942]"
               )}
             >
               <div className={cn(
-                "p-2 border-b border-zinc-800 text-center",
+                "p-2 border-b border-[#1e2738] text-center",
                 isToday(date) && "bg-blue-500/10"
               )}>
-                <div className="text-sm font-medium text-zinc-300">{format(date, 'EEE')}</div>
+                <div className="text-sm font-medium text-gray-300">{format(date, 'EEE')}</div>
                 <div className={cn(
                   "inline-flex items-center justify-center w-8 h-8 mt-1 rounded-full text-sm",
-                  isToday(date) && "bg-blue-500 text-white font-semibold"
+                  isToday(date) ? "bg-blue-500 text-white font-semibold" : "text-gray-400"
                 )}>
                   {format(date, 'd')}
                 </div>
@@ -94,7 +130,9 @@ export function CalendarView({ tasks }: CalendarViewProps) {
                     key={task.id}
                     className={cn(
                       "px-3 py-2 rounded-md border text-xs transition-colors cursor-pointer",
-                      getTaskStyle(task)
+                      task.priority === 'high' ? 'bg-red-500/10 border-red-500/20 text-red-300' :
+                      task.priority === 'medium' ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-300' :
+                      'bg-blue-500/10 border-blue-500/20 text-blue-300'
                     )}
                   >
                     <div className="font-medium truncate">{task.title}</div>
@@ -112,104 +150,84 @@ export function CalendarView({ tasks }: CalendarViewProps) {
         </div>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="p-4 bg-zinc-950">
-          <div className="flex items-center gap-2 mb-4">
-            <Clock className="h-5 w-5 text-blue-500" />
-            <h3 className="font-semibold text-white">Upcoming Tasks</h3>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="space-y-6">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Clock className="h-5 w-5 text-blue-400" />
+                <h3 className="text-lg font-semibold text-gray-200">Active Tasks</h3>
+              </div>
+              <Button variant="outline" size="sm" className="border-[#2a3441] hover:bg-[#1e2738]">
+                View All
+              </Button>
+            </div>
+            <div className="space-y-3">
+              {tasks
+                .filter(task => task.status !== 'done')
+                .slice(0, 5)
+                .map((task, index) => (
+                  <TaskCard key={task.id} task={task} number={index + 1} />
+                ))}
+            </div>
           </div>
-          <div className="space-y-2">
-            {tasks
-              .filter(task => task.due_date && new Date(task.due_date) > new Date())
-              .sort((a, b) => new Date(a.due_date!).getTime() - new Date(b.due_date!).getTime())
-              .slice(0, 4)
-              .map(task => (
-                <div key={task.id} className="flex items-center justify-between p-3 rounded-lg bg-zinc-900">
-                  <div>
-                    <p className="font-medium text-sm text-zinc-200">{task.title}</p>
-                    <p className="text-xs text-zinc-400">
-                      {format(new Date(task.due_date!), 'MMM d, h:mm a')}
-                    </p>
-                  </div>
-                  <div className={cn(
-                    "px-2 py-1 rounded-full text-xs",
-                    task.priority === 'high' ? 'bg-red-500/10 text-red-500' :
-                    task.priority === 'medium' ? 'bg-yellow-500/10 text-yellow-500' :
-                    'bg-blue-500/10 text-blue-500'
-                  )}>
-                    {task.priority}
-                  </div>
-                </div>
-              ))}
-          </div>
-        </Card>
 
-        <Card className="p-4 bg-zinc-950">
-          <div className="flex items-center gap-2 mb-4">
-            <AlertTriangle className="h-5 w-5 text-red-500" />
-            <h3 className="font-semibold text-white">Urgent Tasks</h3>
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-red-500" />
+                <h3 className="text-lg font-semibold text-white">Urgent Tasks</h3>
+              </div>
+              <Button variant="outline" size="sm">View All</Button>
+            </div>
+            <div className="space-y-3">
+              {tasks
+                .filter(task => task.priority === 'high' && task.status !== 'done')
+                .slice(0, 3)
+                .map((task, index) => (
+                  <TaskCard key={task.id} task={task} number={index + 1} />
+                ))}
+            </div>
           </div>
-          <div className="space-y-2">
-            {tasks
-              .filter(task => task.priority === 'high' && task.status !== 'done')
-              .slice(0, 4)
-              .map(task => (
-                <div key={task.id} className="flex items-center justify-between p-3 rounded-lg bg-zinc-900">
-                  <div>
-                    <p className="font-medium text-sm text-zinc-200">{task.title}</p>
-                    <p className="text-xs text-zinc-400">{task.description}</p>
-                  </div>
-                  {task.due_date && (
-                    <div className="text-xs text-red-500">
-                      {format(new Date(task.due_date), 'MMM d')}
-                    </div>
-                  )}
-                </div>
-              ))}
-          </div>
-        </Card>
+        </div>
 
-        <Card className="p-4 bg-zinc-950">
-          <div className="flex items-center gap-2 mb-4">
-            <ListTodo className="h-5 w-5 text-yellow-500" />
-            <h3 className="font-semibold text-white">In Progress</h3>
+        <div className="space-y-6">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <ListTodo className="h-5 w-5 text-yellow-500" />
+                <h3 className="text-lg font-semibold text-white">In Progress</h3>
+              </div>
+              <Button variant="outline" size="sm">View All</Button>
+            </div>
+            <div className="space-y-3">
+              {tasks
+                .filter(task => task.status === 'in-progress')
+                .slice(0, 3)
+                .map((task, index) => (
+                  <TaskCard key={task.id} task={task} number={index + 1} />
+                ))}
+            </div>
           </div>
-          <div className="space-y-2">
-            {tasks
-              .filter(task => task.status === 'in-progress')
-              .slice(0, 4)
-              .map(task => (
-                <div key={task.id} className="flex items-center justify-between p-3 rounded-lg bg-zinc-900">
-                  <div>
-                    <p className="font-medium text-sm text-zinc-200">{task.title}</p>
-                    <p className="text-xs text-zinc-400">{task.description}</p>
-                  </div>
-                  <div className="h-2 w-2 rounded-full bg-yellow-500" />
-                </div>
-              ))}
-          </div>
-        </Card>
 
-        <Card className="p-4 bg-zinc-950">
-          <div className="flex items-center gap-2 mb-4">
-            <CheckCircle2 className="h-5 w-5 text-green-500" />
-            <h3 className="font-semibold text-white">Recently Completed</h3>
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5 text-green-500" />
+                <h3 className="text-lg font-semibold text-white">Completed</h3>
+              </div>
+              <Button variant="outline" size="sm">View All</Button>
+            </div>
+            <div className="space-y-3">
+              {tasks
+                .filter(task => task.status === 'done')
+                .slice(0, 3)
+                .map((task, index) => (
+                  <TaskCard key={task.id} task={task} number={index + 1} />
+                ))}
+            </div>
           </div>
-          <div className="space-y-2">
-            {tasks
-              .filter(task => task.status === 'done')
-              .slice(0, 4)
-              .map(task => (
-                <div key={task.id} className="flex items-center justify-between p-3 rounded-lg bg-zinc-900">
-                  <div>
-                    <p className="font-medium text-sm text-zinc-200">{task.title}</p>
-                    <p className="text-xs text-zinc-400">{task.description}</p>
-                  </div>
-                  <div className="h-2 w-2 rounded-full bg-green-500" />
-                </div>
-              ))}
-          </div>
-        </Card>
+        </div>
       </div>
     </div>
   );
